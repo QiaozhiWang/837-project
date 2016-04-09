@@ -1,6 +1,8 @@
-import numpy as np 
+import numpy as np
+import pprint as pp 
 from io import StringIO
-import re, pprint
+from functools import reduce
+import re
 
 def read_dataset(path):
 	in_path = "Data/"+path		
@@ -26,37 +28,52 @@ def read_dataset(path):
 			print(data_sets[j][16280]) 
 		"""
 		data = np.array(data_sets)	#change to ndarry type
-	return data
+	return data 
 
 def build_sets(vectors):
 	A = vectors
+	d_set = []
+	A_sets = []
 	col_num = len(A[1,:])
+	case_num = len(A[:,1])
+	print(col_num)
+	print(case_num)
 	oc_dict = []
 	total_set = []	
-	#print(col_num)
 	for i in range(0, col_num):	
 		V = A[:,i]
 		#print("V: ", V)
 		unique, counts =  np.unique(V, return_counts=True)
 		col_dic = dict(zip(unique, counts))
-		oc_dict.append(col_dic)
+		oc_dict.append(col_dic)			#save for calculate cutpoints
 		col_set = []
 		for key, value in col_dic.items():
 			#print("key: ",key)
-			col_set.append(np.where(V == key))
+			col_set.append(np.where(V == key)[0])
 		total_set.append(col_set)
-	pprint.pprint(total_set)
-	if len(total_set[:,1]) == 1:
-		d = total_set
-		A_s = ""
+	#pp.pprint(total_set)
+	if col_num == 1:
+		d_set = total_set
+		A_sets = ""
 	else:
-		d = total_set[-1]
-		pre_A = total_set[0:-1]
-		
-		for sub_set in pre_A[0]:		#
-			for elem in sub_set:
+		d_set = total_set[-1]
+		#pp.pprint(d_set)
+		#pp.pprint(total_set[0:-1])
+		#----------put all A_sets in one list, except total_set[0]-----------#
+		comp = [sub_set for A_set in total_set[0:-1] for sub_set in A_set] 	 
+		#print(comp)
+		elem_set = np.linspace(0,case_num-1,case_num)
+		#new_set = elem_set
+		for i in elem_set:	#case_num
+			print(elem_set)
+			its_set=[cset for cset in comp if np.in1d(cset,int(i),assume_unique=True).any()]
+			#print(int(i), its_set)
+			p_result = reduce(np.intersect1d, (its_set))
+			print(p_result)
+			elem_set = np.setdiff1d(elem_set,p_result)
+			print(elem_set)
+			#print(p_result)
 			
-		
 	return ""	
 
 def lem2(vectors):
