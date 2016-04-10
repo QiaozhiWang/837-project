@@ -106,9 +106,9 @@ def total_cutpoints(vectors):		#use "global equal interval method"
 		total_dict.append(cp_dict)	
 		#----------------the first time cutpoint calculation for each attribute------------------#
 		print(col_dic[0][0],cp_dict[0][0])
-		np.where((column>col_dic[0][0])&(column>cp_dict[0][0]))[0]
-		
-	pp.pprint(total_dict)		
+		pos = np.where((column>=col_dic[0][0])&(column<=str(cp_dict[0][0])))[0]
+		print(pos)
+	#pp.pprint(total_dict)		
 	
 	
 	
