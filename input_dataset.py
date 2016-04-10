@@ -31,24 +31,22 @@ def read_dataset(path):
 	return data 
 
 def build_sets(vectors):
-	A = vectors
 	d_set = []
 	A_sets = []
-	col_num = len(A[1,:])
-	case_num = len(A[:,1])
+	col_num = len(vectors[1,:])
+	case_num = len(vectors[:,1])
 	#print(col_num)
 	#print(case_num)
 	oc_dict = []
 	total_set = []	
-	for i in range(0, col_num):	
-		V = A[:,i]
+	for column in vectors.T:	
 		#print("V: ", V)
-		uniques =  np.unique(V)
+		uniques =  np.unique(column)
 		#print(uniques)
 		col_set = []
 		for key in uniques:
 			#print("key: ",key)
-			col_set.append(np.where(V == key)[0])
+			col_set.append(np.where(column == key)[0])
 		total_set.append(col_set)
 	#pp.pprint(total_set)
 	if col_num == 1:
@@ -85,7 +83,7 @@ def lem2(vectors):
 	
 	return ""
 
-def cutpoints(vectors):		#use "global equal interval method" 
+def total_cutpoints(vectors):		#use "global equal interval method" 
 	raw_value = vectors
 	col_num = len(raw_value[1,:])
 	case_num = len(raw_value[:,1])
@@ -93,30 +91,32 @@ def cutpoints(vectors):		#use "global equal interval method"
 	#print(case_num)
 	cp_dict = {}
 	total_dict = []
-	for i in range(0, col_num-1):		#ignore decision column
-		uniques, counts = np.unique(raw_value[:,i], return_counts=True)
-		col_dic = dict(zip(uniques, counts))
-		
-		col_dic = dict(sorted(col_dic, key=lambda x: x[0]))
-		print(type(col_dic))
-		pp.pprint(col_dic)
-		cp_dict = {}
+	for column in raw_value.T:		#ignore decision column
+		uniques, counts = np.unique(column, return_counts=True)
+		col_dic = dict(zip(uniques, counts))	
+		col_dic = sorted(col_dic.items(), key=lambda x: x[0])	#sort by key
+		#pp.pprint(col_dic)
+		cp_dict = {}	#cutpoints dictionary
 		v_sum = 0		#used for freq-calculate
-		i = 0		#used for middle point calculate
-		"""
-		for key, value in col_dic.items():
-			if i == np.size(uniques)-1:
-				break
-			mid_point = round((np.float(uniques[i])+np.float(uniques[i+1]))/2,4)
-			i += 1
-			v_sum += value
-			cp_dict[mid_point] = round(float(v_sum)/case_num,4)
-		cp_dict = sorted(cp_dict.items(), key=lambda x: x[1]) 
-		#pp.pprint(cp_dict)
-		total_dict.append(cp_dict)			
-	#pp.pprint(total_dict)
-		"""
+		for i in range(0, np.size(uniques)-1):
+			mid_point = round((np.float(col_dic[i][0])+np.float(col_dic[i+1][0]))/2,4)
+			v_sum += col_dic[i][1]
+			cp_dict[mid_point] = round(abs(float(v_sum)/case_num-0.5),4)
+		cp_dict = sorted(cp_dict.items(), key=lambda x: x[1]) 	#sort by value
+		total_dict.append(cp_dict)	
+		#----------------the first time cutpoint calculation for each attribute------------------#
+		print(col_dic[0][0],cp_dict[0][0])
+		np.where((column>col_dic[0][0])&(column>cp_dict[0][0]))[0]
+		
+	pp.pprint(total_dict)		
+	
+	
+	
+	return total_dict		#, fir_version
+	
+def get_interval(attr, times):	#attr: calculate which attribute's cutpoints
 	return ""
+	 
 
 if __name__ == "__main__":
 	"""#------------------for test------------------#
@@ -137,19 +137,21 @@ if __name__ == "__main__":
 	#-----------judge data_type of attributes----------#
 	if not re.match(r'\d+\.\d+\.\.\d+\.\d+',values[0][0]):	#If dataset is not symbolied
 		print("***This is not symbolic value dataset. Assume dataset is consistant!")
-		data[1:][:-1] = cutpoints(values)
-	#else:
-		#cf = check_conflict()
+		cutpoints = total_cutpoints(values[:,:-1])
+		 #data[1:][:-1]
+	else:
+		cf = check_conflict()
 		#if cf:
 			#readin lower or upper
 	
 	#------------------Build_sets----------------------#
 	(d_set, A_sets, oc_dict) = build_sets(values)		#There's no conflicts in this kind of data
 	time3 = timeit.default_timer()
-	print("**Build_sets time: ", time3-time2)
+	#pp.pprint(A_sets)
+	#print("**Build_sets time: ", time3-time2)
 	
 	#pp.pprint(d_set)
-	#pp.pprint(A_sets)	
+		
 	#pp.pprint(oc_dict)
 	#print (data)
 	
