@@ -2,7 +2,7 @@ import numpy as np
 import pprint as pp 
 from io import StringIO
 from functools import reduce
-import re
+import re, timeit
 
 def read_dataset(path):
 	in_path = "Data/"+path		
@@ -36,18 +36,17 @@ def build_sets(vectors):
 	A_sets = []
 	col_num = len(A[1,:])
 	case_num = len(A[:,1])
-	print(col_num)
-	print(case_num)
+	#print(col_num)
+	#print(case_num)
 	oc_dict = []
 	total_set = []	
 	for i in range(0, col_num):	
 		V = A[:,i]
 		#print("V: ", V)
-		unique, counts =  np.unique(V, return_counts=True)
-		col_dic = dict(zip(unique, counts))
-		oc_dict.append(col_dic)			#save for calculate cutpoints
+		uniques =  np.unique(V)
+		#print(uniques)
 		col_set = []
-		for key, value in col_dic.items():
+		for key in uniques:
 			#print("key: ",key)
 			col_set.append(np.where(V == key)[0])
 		total_set.append(col_set)
@@ -62,19 +61,25 @@ def build_sets(vectors):
 		#----------put all A_sets in one list, except total_set[0]-----------#
 		comp = [sub_set for A_set in total_set[0:-1] for sub_set in A_set] 	 
 		#print(comp)
-		elem_set = np.linspace(0,case_num-1,case_num)
-		#new_set = elem_set
-		for i in elem_set:	#case_num
-			print(elem_set)
-			its_set=[cset for cset in comp if np.in1d(cset,int(i),assume_unique=True).any()]
-			#print(int(i), its_set)
-			p_result = reduce(np.intersect1d, (its_set))
-			print(p_result)
-			elem_set = np.setdiff1d(elem_set,p_result)
-			print(elem_set)
-			#print(p_result)
-			
-	return ""	
+		elem_set = np.linspace(0,case_num-1,case_num)		
+		while True:
+			try:		
+				#print(elem_set[0])
+				its_set=[cset for cset in comp if np.in1d(cset,elem_set[0],assume_unique=True).any()]
+				#print(elem_set[0], its_set)
+				p_result = reduce(np.intersect1d, (its_set))
+				A_sets.append(p_result)
+				#print(p_result)
+				elem_set = np.setdiff1d(elem_set,p_result)
+				#print(elem_set)
+				#print(p_result)
+			except:
+				break
+	return d_set, A_sets, oc_dict	
+
+def check_conflict():
+
+	return ""
 
 def lem2(vectors):
 	
@@ -82,10 +87,35 @@ def lem2(vectors):
 
 def cutpoints(vectors):		#use "global equal interval method" 
 	raw_value = vectors
-	for i in range(0, col_num):	
-		x, y ,z =  np.unique(data, return_counts=True, return_index=True)
-	#col_dic = dict(zip(unique, counts))
-	print(x,y,z)
+	col_num = len(raw_value[1,:])
+	case_num = len(raw_value[:,1])
+	#print(col_num)
+	#print(case_num)
+	cp_dict = {}
+	total_dict = []
+	for i in range(0, col_num-1):		#ignore decision column
+		uniques, counts = np.unique(raw_value[:,i], return_counts=True)
+		col_dic = dict(zip(uniques, counts))
+		
+		col_dic = dict(sorted(col_dic, key=lambda x: x[0]))
+		print(type(col_dic))
+		pp.pprint(col_dic)
+		cp_dict = {}
+		v_sum = 0		#used for freq-calculate
+		i = 0		#used for middle point calculate
+		"""
+		for key, value in col_dic.items():
+			if i == np.size(uniques)-1:
+				break
+			mid_point = round((np.float(uniques[i])+np.float(uniques[i+1]))/2,4)
+			i += 1
+			v_sum += value
+			cp_dict[mid_point] = round(float(v_sum)/case_num,4)
+		cp_dict = sorted(cp_dict.items(), key=lambda x: x[1]) 
+		#pp.pprint(cp_dict)
+		total_dict.append(cp_dict)			
+	#pp.pprint(total_dict)
+		"""
 	return ""
 
 if __name__ == "__main__":
@@ -97,15 +127,34 @@ if __name__ == "__main__":
 		print (data)
 		#print (data[7][-1])
 	#------------------for test------------------#"""
+	time1 = timeit.default_timer()	
+	#**************read in file name and number K****************#
+	#**************upper or lower and output file name****************#
 	data = read_dataset("test.txt")
-	values = data[1:]
-	build_sets(values)
-	#print (data)
+	time2 = timeit.default_timer()
+	#print("**Data read time: ", time2-time1)
+	values = data[1:]	#contain decision column
 	#-----------judge data_type of attributes----------#
-	#if not re.match(r'\d+\.\d+\.\.\d+\.\d+',values[0][0]):
-		#data[1:][:-1] = cutpoints(values)
+	if not re.match(r'\d+\.\d+\.\.\d+\.\d+',values[0][0]):	#If dataset is not symbolied
+		print("***This is not symbolic value dataset. Assume dataset is consistant!")
+		data[1:][:-1] = cutpoints(values)
+	#else:
+		#cf = check_conflict()
+		#if cf:
+			#readin lower or upper
 	
-	#rule_set = lem2(values)
+	#------------------Build_sets----------------------#
+	(d_set, A_sets, oc_dict) = build_sets(values)		#There's no conflicts in this kind of data
+	time3 = timeit.default_timer()
+	print("**Build_sets time: ", time3-time2)
+	
+	#pp.pprint(d_set)
+	#pp.pprint(A_sets)	
+	#pp.pprint(oc_dict)
+	#print (data)
+	
+	#rule_set = lem2(values)	
+	
  
 	
 
