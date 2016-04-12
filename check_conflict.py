@@ -29,4 +29,5 @@ def check_conflict(vectors, d):	#vectors-contain decisions
 	print("conflictSet:")
 	print(conflictSet)
 	print("**Time of check conflict: ", stop-start)
-	return conflict, conflictSet 
+	return conflict, conflictSet 	#lower = diff conflictSet
+

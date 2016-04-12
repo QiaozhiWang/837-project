@@ -3,12 +3,9 @@ import pprint as pp
 from io import StringIO
 import re, timeit, collections
 from ad_sets import ad_sets, A_set
-from cutpoint import entropy
-from check_conflict import check_conflict 
+from cutpoint import entropy, cutpoint_again
+from check_conflict import check_conflict
 from input_dataset import read_dataset
-
-def cutpoint_again():
-	return ""
 
 def lem2(vectors):
 	
@@ -26,8 +23,10 @@ def total_cutpoints(vectors):		#use "global equal interval method"
 	#print(case_num)
 	new_mat = np.zeros((case_num,col_num+1)).astype(np.str)
 	cp_dict = {}
+	col_k_dict = {}
 	total_dict = []
 	for j in range(0, col_num):		#ignore decision column
+		col_k_dict[j] = 2		#Initialize col: k dict
 		column = raw_value[:,j]
 		uniques, counts = np.unique(column, return_counts=True)
 		col_dic = dict(zip(uniques, counts))	
@@ -64,22 +63,30 @@ def total_cutpoints(vectors):		#use "global equal interval method"
 		#----------------the first time cutpoint calculation for each attribute------------------#
 		#----------------Change to symbolic-------------------------------#
 		#print(col_dic[0][0], fir_cut)
+
 		pos_1 = np.where((column>=col_dic[0][0])&(column<fir_cut))
 		np.put(new_mat[:,j], pos_1, "%s..%s"%(col_dic[0][0],fir_cut))
 		pos_2 = np.where(column>fir_cut)
 		np.put(new_mat[:,j], pos_2, "%s..%s"%(fir_cut, col_dic[-1][0]))
 	new_mat[:,-1] = vectors[:,-1]
-	print(new_mat[:,1])
+	#print(new_mat[:,1])
 	fir_cut_time = timeit.default_timer()
 	print("Time for cutpoints and fir_cut: ", fir_cut_time-cut_start) 
 	#--------------check conflicts--------------#
 	conflict, cf_set = check_conflict(new_mat,d_set)
 	#-------------if conflicts-----------#
 	print("!!!!!!!!!Prepare for next cutpoint")
-	if conflict:
-		next_col = entropy(new_mat,cf_set,total_dict, col_k_dict)
-	#pp.pprint(total_dict)		
-	return total_dict		#, fir_version
+	pp.pprint("total_dict: ", total_dict)	
+	#while conflict:
+	for t in range(0,1):
+		next_col, new_k = entropy(new_mat,cf_set,total_dict, col_k_dict)
+		new_mat[:,next_col] = cutpoint_again(raw_value[:,next_col],total_dict[next_col], new_k)
+		conflict, cf_set = check_conflict(new_mat,d_set)
+		#print("new_mat: ")
+		#print(new_mat)	
+		
+
+	return new_mat		#, fir_version
 	
 def get_interval(attr, times):	#attr: calculate which attribute's cutpoints
 	return ""
@@ -104,7 +111,7 @@ if __name__ == "__main__":
 	print("**Data read time: ", time2-time1)
 	values = data[1:]	#contain decision column
 	#-----------judge data_type of attributes----------#
-	print(values[0][0])
+	#print(values[0][0])
 	if not re.match(r'(.+?)(\d+\.\.\d+)(.+?)',values[0][0]):	#If dataset is not symbolied	#15..3.6 \d+\..\d+
 		print("***This is not symbolic value dataset. Assume dataset is consistant!")
 		cutpoints = total_cutpoints(values)
