@@ -17,6 +17,8 @@ def entropy(mat, cf_set, total_dict, col_k_dict):
 		column = new[:,i]
 		uniques, counts = np.unique(column, return_counts=True)
 		col_dict = dict(zip(uniques, counts))
+		if len(col_dict) == 1:
+			continue
 		col_entrp = 0
 		print(col_dict)
 		for key, value in col_dict.items():
@@ -40,8 +42,9 @@ def entropy(mat, cf_set, total_dict, col_k_dict):
 	print("s_entrp; ", s_entrp)
 	#-------if same entropy, select smallest column order--------#
 	#---and make sure there possibility to get another cutpoint--#
+	"""
 	for order in range(0, col_num):
-		candi_set = [r for r in range(0, col_num) if s_entrp[order][1] == s_entrp[i][1])
+		candi_set = [r for r in range(0, col_num) if s_entrp[order][1] == s_entrp[i][1])]
 		scandi_set = sorted(candi_set)
 		for s in range(0, len(scandi_set)):
 			
@@ -51,6 +54,7 @@ def entropy(mat, cf_set, total_dict, col_k_dict):
 		if len(total_dict[candi]) == col_k_dict[candi]-1:
 			
 	print("selected_col: ", selected_col)
+	"""
 	
 	return selected_col
 	

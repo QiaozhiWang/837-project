@@ -77,7 +77,7 @@ def total_cutpoints(vectors):		#use "global equal interval method"
 	#-------------if conflicts-----------#
 	print("!!!!!!!!!Prepare for next cutpoint")
 	if conflict:
-		next_col = entropy(new_mat,cf_set)
+		next_col = entropy(new_mat,cf_set,total_dict, col_k_dict)
 	#pp.pprint(total_dict)		
 	return total_dict		#, fir_version
 	
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 	time1 = timeit.default_timer()	
 	#**************read in file name and number K****************#
 	#**************upper or lower and output file name****************#
-	data = read_dataset("common_combined_lers.txt")
+	data = read_dataset("austr.txt")
 	#print(data[1,:])
 	#print(data[:,40])
 	time2 = timeit.default_timer()
