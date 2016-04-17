@@ -56,23 +56,28 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 				print("T_content and G intersection: ", set(T_content)!=set(np.intersect1d(T_content, G)))
 			print("T: ", T)
 			#print("Length of T: ", len(T))
-			#==========smallest while end====================#
+			#==========smallest while end====================# 
 			real_T = []
 			if len(T) != 1:
 				for p in range(0, len(T)):
 					ts_sets = [np.array(T[t][2]) for t in range(0, len(T)) if t!=p]
-					#print("ts_sets: ", ts_sets)
-					if set(T_content) == set(reduce(np.intersect1d, (ts_sets))):
+					print("ts_sets: ", ts_sets)
+					#if set(T_content) == set(reduce(np.intersect1d, (ts_sets))):
+					real_T_content = set(reduce(np.intersect1d, (ts_sets)))
+					print("Fuck: ", ts_sets, real_T_content, value)
+					if set(reduce(np.intersect1d, (ts_sets))) < set(value):
+						print("less than, True")
+
 						continue
-					real_T.append(T[p])
+					real_T.append(T[p][0:2])
 			else:
-				real_T = T[0]
+				real_T = T[0][0:2]
 			print("real_T: ",real_T)		
 			if len(fat_T) != 0:
 				for T_key, T_value in fat_T.items():
 					if set(T_value) == set(np.intersect1d(T_value, T_content)):		#consist element is the subset of new T_content, delete it
 						del fat_T[T_key]
-			fat_T[str(real_T)] = T_content
+			#fat_T[str(real_T)] = #
 			#fat_T.append(real_T)
 			
 			G_left = np.array(list(set(G_left)-set(G)))
