@@ -1,0 +1,9 @@
+< a a a d >
+[ A B C D ]
+low low low yes
+high high medium yes
+high low medium yes
+high high high yes
+high high high no
+low high medium no
+high low high no

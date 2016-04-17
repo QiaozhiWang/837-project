@@ -9,9 +9,9 @@ def ad_sets(vectors):
 	#print(vectors)
 	d_set = []
 	a_sets = []
-	d_set_dict = {}
-	a_set_dict = {}
-	a_dict_list = []
+	d_set_dict = {}		
+	a_set_dict = {}		#[(a,v)] 
+	a_dict_list = []	#contains all the a_set_dict
 	try:
 		col_num = len(vectors[1,:])
 		case_num = len(vectors[:,1])
@@ -48,8 +48,8 @@ def ad_sets(vectors):
 		a_set_dicts = {}
 	ad_build = timeit.default_timer()
 	print("******Time for a and d*********: ", ad_build-build)
-	#print(d_set)
-	#print(d_set_dict)		
+	#print("d_set: ", d_set)
+	#print("d_set_dict: ", d_set_dict)		
 	return d_set, a_sets, d_set_dict, a_dict_list
 
 def A_set(vectors):	

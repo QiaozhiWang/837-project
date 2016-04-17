@@ -1,126 +1,112 @@
 import numpy as np
 import pprint as pp 
 from io import StringIO
-import re, timeit, collections
+import re, timeit, collections, random
 from ad_sets import ad_sets, A_set
-from cutpoint import entropy, cutpoint_again
-from check_conflict import check_conflict
+from conflict import lower, upper
 from input_dataset import read_dataset
+from lem2 import lem2
 
-def lem2(vectors):
-	
-	return ""
+def k_parts(vectors, k):
+	#???????????if length can't be divided integrately??????????????#
+	cases_num = len(vectors[:,1])
+	rs = range(0, 12)
+	remain = rs
+	while remain:
+		print("remain: ", remain)
+		select = random.sample(remain, 4)
+		remain = set(remain) - set(select)
+		print("select: ", select)
 
-def total_cutpoints(vectors):		#use "global equal interval method" 
+
+
+def total_cutpoints(vectors):		#get all [(a,v)] for lem2, change to new matrix
+	print("In total cutpoints...")
 	cut_start = timeit.default_timer()
 	raw_value = vectors[:,:-1].astype(np.float)
-	(d_set, a_sets, d_set_dict, a_sets_dict) = ad_sets(vectors[:,-1])	#get d_set, which never change
-	d_set = [x.tolist() for x in d_set]
+	(d_set, a_sets, d_set_dict, a_sets_dict) = ad_sets(vectors[:,-1]) #get d_set, which never change
 	#print(d_set)
 	col_num = len(raw_value[1,:])
 	case_num = len(raw_value[:,1])
 	#print(col_num)
 	#print(case_num)
-	new_mat = np.zeros((case_num,col_num+1)).astype(np.str)
-	cp_dict = {}
-	col_k_dict = {}
-	total_dict = []
+	sorted_element = []		#all unique elements in the column	
+	cp_dict = [] #[[0, '0.8..1.0', array([0, 1, 2])],... format, cutpoints dict, used for lem2
 	for j in range(0, col_num):		#ignore decision column
-		col_k_dict[j] = 2		#Initialize col: k dict
+		cp_list = []
 		column = raw_value[:,j]
-		uniques, counts = np.unique(column, return_counts=True)
-		col_dic = dict(zip(uniques, counts))	
-		col_dic = sorted(col_dic.items(), key=lambda x: x[0])	#sort by key
-		#pp.pprint("**col_dic: ")
-		#pp.pprint (col_dic)
-		if len(col_dic) == 1:
-			new_mat[:,j] = column
-			continue
-		cp_dict = {}	#cutpoints dictionary
-		#==================check whether col_dic only have one element==================#
-		v_sum = 0		#used for freq-calculate
-		for i in range(0, np.size(uniques)-1):
-			mid_point = round((np.float(col_dic[i][0])+np.float(col_dic[i+1][0]))/2,4)
-			v_sum += col_dic[i][1]
-			cp_dict[mid_point] = round(abs(float(v_sum)/case_num-0.5),4)
-		cp_dict = sorted(cp_dict.items(), key=lambda x: x[1]) 	#sort by value
-		total_dict.append(cp_dict)
-		#----------------if first cutpoint has dulplicated freq-----------------------------#	
-		if np.size(cp_dict)/2>1 and cp_dict[1][1] == cp_dict[0][1]:
-			fir_cut = min(cp_dict[0][0],cp_dict[1][0])
-			#print("**cp_dict[0],cp_dict[1]: ")
-			#print(cp_dict[0],cp_dict[1])
-		"""
-		else:
-			if np.size(cp_dict)/2>1:
-				print("**cp_dict[0],cp_dict[1]: ")
-				print(cp_dict[0],cp_dict[1])
-		"""
-		#print("**cp_dict[0]: ")
-		#print (j, cp_dict[0])
-		fir_cut = cp_dict[0][0]
-		#print("*Fir_cut: ",fir_cut,"freq: ", cp_dict[0][1])
-		#----------------the first time cutpoint calculation for each attribute------------------#
-		#----------------Change to symbolic-------------------------------#
-		#print(col_dic[0][0], fir_cut)
-
-		pos_1 = np.where((column>=col_dic[0][0])&(column<fir_cut))
-		np.put(new_mat[:,j], pos_1, "%s..%s"%(col_dic[0][0],fir_cut))
-		pos_2 = np.where(column>fir_cut)
-		np.put(new_mat[:,j], pos_2, "%s..%s"%(fir_cut, col_dic[-1][0]))
-	new_mat[:,-1] = vectors[:,-1]
-	#print(new_mat[:,1])
-	fir_cut_time = timeit.default_timer()
-	print("Time for cutpoints and fir_cut: ", fir_cut_time-cut_start) 
-	#--------------check conflicts--------------#
-	conflict, cf_set = check_conflict(new_mat,d_set)
-	#-------------if conflicts-----------#
-	print("!!!!!!!!!Prepare for next cutpoint")
-	pp.pprint("total_dict: ", total_dict)	
-	#while conflict:
-	for t in range(0,1):
-		next_col, new_k = entropy(new_mat,cf_set,total_dict, col_k_dict)
-		new_mat[:,next_col] = cutpoint_again(raw_value[:,next_col],total_dict[next_col], new_k)
-		conflict, cf_set = check_conflict(new_mat,d_set)
-		#print("new_mat: ")
-		#print(new_mat)	
-		
-
-	return new_mat		#, fir_version
+		sorted_element = sorted(np.unique(column))
+		start_point = sorted_element[0]
+		end_point = sorted_element[-1]
+		#print("sorted_element: ",sorted_element)
+		if len(sorted_element) == 1:
+			cp_dict.append([j,"%s..%s"%(sorted_element[0],sorted_element[0]),range(0, col_num)])
+			continue 
+		for i in range(0, len(sorted_element)-1):
+			mid_point = round((np.float(sorted_element[i])+np.float(sorted_element[i+1]))/2,4)
+			cp_list.append(mid_point)	
+		for cp in cp_list:
+			pos1 = np.where((column>=start_point)&(column<cp))[0]
+			cp_dict.append([j,"%s..%s"%(start_point,cp),pos1])
+			pos2 = np.where((column>cp)&(column<=end_point))[0]
+			cp_dict.append([j,"%s..%s"%(cp, end_point),pos2])
+	#print("cp_dict: ")
+	#pp.pprint(cp_dict)
+	#print("d_set_dict: ")
+	#pp.pprint (d_set_dict)
+	return cp_dict, d_set_dict		#this can be used for lem2	
 	
-def get_interval(attr, times):	#attr: calculate which attribute's cutpoints
-	return ""
-	 
+def av(vectors):
+	print("In av function...")
+	syb_mat = vectors[:,:-1]
+	av_dict = []		#format is the same with cp_dict
+	for i in range(0, len(syb_mat[1,:])):
+		column = syb_mat[:,i]
+		sorted_element = sorted(np.unique(column))
+		for elem in sorted_element:
+			pos = np.where((column==elem))[0]
+			av_dict.append([i, elem, pos])
+	#pp.pprint("av_dict: ")
+	#pp.pprint(av_dict)
+	return av_dict
 
 if __name__ == "__main__":
-	"""#------------------for test------------------#
+	"""#------------------for test------------------# 
 	file_list = ["common_combined_lers.txt","keller-train-ca.txt",
 			"austr.txt","iris-49-aca.txt","test.txt"]
 	for pf in file_list:
 		data = read_dataset(pf)
 		print (data)
-		#print (data[7][-1])
 	#------------------for test------------------#"""
 	time1 = timeit.default_timer()	
-	#**************read in file name and number K****************#
-	#**************upper or lower and output file name****************#
-	data = read_dataset("austr.txt")
-	#print(data[1,:])
-	#print(data[:,40])
+	data = read_dataset("anothertest.txt")
 	time2 = timeit.default_timer()
 	print("**Data read time: ", time2-time1)
 	values = data[1:]	#contain decision column
+	#================divide to k parts============#
+
 	#-----------judge data_type of attributes----------#
-	#print(values[0][0])
-	if not re.match(r'(.+?)(\d+\.\.\d+)(.+?)',values[0][0]):	#If dataset is not symbolied	#15..3.6 \d+\..\d+
+	if not re.match(r'(.+?)(\d+\.\.\d+)(.+?)',values[0][0]):	
 		print("***This is not symbolic value dataset. Assume dataset is consistant!")
-		cutpoints = total_cutpoints(values)
+		cp_dict, d_set_dict = total_cutpoints(values)
+		print("cp_dict: ", cp_dict)
+		print("d_set_dict: ", d_set_dict)
+		lem2(d_set_dict, cp_dict)
 		 #data[1:][:-1]
 	else:
 		print("This is symbolic dataset")
 		d_set, a_sets, d_set_dict, a_dict_list = ad_sets(values[:,-1])
-		cf, cf_set = check_conflict(values[:,0:-1],d_set)
-		
+
+		A_set = A_set(values[:,0:-1])
+		#if ul_flag == False			#ul_flag defined as upper=True, lower=False
+		lower_set = lower(values[:,0:-1],d_set_dict,A_set)  
+		print("Lower: ", lower_set)
+		upper_set = upper(values[:,0:-1],d_set_dict,A_set)
+		print("Upper: ", upper_set)
+		av_dict = av(values)
+		total_fat_T = lem2(lower_set, av_dict)
+	#++++++lower_set same as d_set_dict, av_dict same as cp_dict
+
 		#if cf:
 			#readin lower or upper
 	#------------------Build_sets----------------------#
@@ -131,13 +117,9 @@ if __name__ == "__main__":
 	#pp.pprint(d_set_dict)
 	#pp.pprint(a_dict_list)
 	#pp.pprint(A_sets)
-	print("**Build_sets time: ", time3-time2)
+	print("**Build_sets time: ", time3-time2) 
 	#print(values[:][:,-1])
-	A_set = A_set(values[:,0:-1])
-	
 	#pp.pprint(d_set)
-		
 	#pp.pprint(oc_dict)
 	#print (data)
-	
 	#rule_set = lem2(values)
