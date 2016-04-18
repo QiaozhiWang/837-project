@@ -4,8 +4,7 @@ from io import StringIO
 import re, timeit, collections, math
 from ad_sets import ad_sets, A_set
 
-def lower(vectors, d_dict, A):	#vectors-contain decisions
-	data_mat = vectors[:,0:-1]
+def lower(d_dict, A):	#vectors-contain decisions
 	d_star_dict = d_dict
 	lower_dict = {}
 	lower_set = []
@@ -23,9 +22,9 @@ def lower(vectors, d_dict, A):	#vectors-contain decisions
 				lower_pd.extend(sub_A)
 		lower_dict[key] = lower_pd
 	#print("lower_dict: ",lower_dict)
-	fullSet = [i for i in range(0, len(data_mat[:,1]))] 
+	#fullSet = [i for i in range(0, len(data_mat[:,1]))] 
 	#print("lower_dict.values: ", lower_dict.values())
-	conflictSet = np.setdiff1d(fullSet,set(lower_set))
+	#conflictSet = np.setdiff1d(fullSet,set(lower_set))
 	#print("conflict: ", conflictSet)
 	#if len(conflictSet):
 	#	conflict = True
@@ -33,8 +32,8 @@ def lower(vectors, d_dict, A):	#vectors-contain decisions
 	print("**Time of check conflict: ", stop-start)
 	return lower_dict		#conflict, conflictSet 	#lower = diff conflictSet
 
-def upper(vectors, d, A):
-	data_mat = vectors[:,0:-1]
+def upper(d, A):
+	#data_mat = vectors[:,0:-1]
 	d_star_dict = d
 	upper_dict = {}
 	BigA = A

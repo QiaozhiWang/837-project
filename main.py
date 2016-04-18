@@ -2,7 +2,7 @@ import numpy as np
 import pprint as pp 
 from io import StringIO
 import re, timeit, collections, random
-from ad_sets import ad_sets, A_set
+from ad_sets import ad_sets, A_set, numeric_A_set
 from conflict import lower, upper
 from input_dataset import read_dataset
 from lem2 import lem2
@@ -32,6 +32,7 @@ def total_cutpoints(vectors):		#get all [(a,v)] for lem2, change to new matrix
 	#print(case_num)
 	sorted_element = []		#all unique elements in the column	
 	cp_dict = [] #[[0, '0.8..1.0', array([0, 1, 2])],... format, cutpoints dict, used for lem2
+	comp_set = []
 	for j in range(0, col_num):		#ignore decision column
 		cp_list = []
 		column = raw_value[:,j]
@@ -47,14 +48,16 @@ def total_cutpoints(vectors):		#get all [(a,v)] for lem2, change to new matrix
 			cp_list.append(mid_point)	
 		for cp in cp_list:
 			pos1 = np.where((column>=start_point)&(column<cp))[0]
+			comp_set.append(pos1)
 			cp_dict.append([j,"%s..%s"%(start_point,cp),pos1])
 			pos2 = np.where((column>cp)&(column<=end_point))[0]
+			comp_set.append(pos2)
 			cp_dict.append([j,"%s..%s"%(cp, end_point),pos2])
 	#print("cp_dict: ")
 	#pp.pprint(cp_dict)
 	#print("d_set_dict: ")
 	#pp.pprint (d_set_dict)
-	return cp_dict, d_set_dict		#this can be used for lem2	
+	return cp_dict, d_set_dict, comp_set		#this can be used for lem2	
 	
 def av(vectors):
 	print("In av function...")
@@ -79,38 +82,50 @@ if __name__ == "__main__":
 		print (data)
 	#------------------for test------------------#"""
 	time1 = timeit.default_timer()	
-	data = read_dataset("anothertest.txt")
+	data = read_dataset("austr.txt")
 	time2 = timeit.default_timer()
 	print("**Data read time: ", time2-time1)
 	values = data[1:]	#contain decision column
+	A_set = A_set(values[:,0:-1])
 	#================divide to k parts============#
 
 	#-----------judge data_type of attributes----------#
 	if not re.match(r'(.+?)(\d+\.\.\d+)(.+?)',values[0][0]):	
 		print("***This is not symbolic value dataset. Assume dataset is consistant!")
-		cp_dict, d_set_dict = total_cutpoints(values)
-		print("cp_dict: ", cp_dict)
-		print("d_set_dict: ", d_set_dict)
-		lem2(d_set_dict, cp_dict)
+		cp_dict, d_set_dict, comp_set = total_cutpoints(values)
+		lower_set = lower(d_set_dict, A_set)
+		total_fat_T =  lem2(lower_set, cp_dict)
 		 #data[1:][:-1]
 	else:
 		print("This is symbolic dataset")
 		d_set, a_sets, d_set_dict, a_dict_list = ad_sets(values[:,-1])
-
-		A_set = A_set(values[:,0:-1])
 		#if ul_flag == False			#ul_flag defined as upper=True, lower=False
-		lower_set = lower(values[:,0:-1],d_set_dict,A_set)  
+		lower_set = lower(d_set_dict,A_set)  
 		print("Lower: ", lower_set)
-		upper_set = upper(values[:,0:-1],d_set_dict,A_set)
+		upper_set = upper(d_set_dict,A_set)
 		print("Upper: ", upper_set)
 		av_dict = av(values)
-		total_fat_T = lem2(lower_set, av_dict)
+		total_fat_T = lem2(upper_set, av_dict)
+
+	#===========print the result as the formated teacher give==========#
+	for concept, situations in total_fat_T.items():
+		show_string = ""
+		for s in range(0, len(situations)):
+			for c in range(0, len(situations[s])-1):
+				show_string = show_string+"(%s, %s) & "%(data[0][situations[s][c][0]],situations[s][c][1])
+			show_string = show_string+"(%s, %s)"%(data[0][situations[s][-1][0]],situations[s][-1][1])+" -> %s\n"%concept
+		print(show_string)
+			
+
+
+
+
 	#++++++lower_set same as d_set_dict, av_dict same as cp_dict
 
 		#if cf:
 			#readin lower or upper
 	#------------------Build_sets----------------------#
-	(d_set, a_sets, d_set_dict, a_dict_list) = ad_sets(values)	#There's no conflicts in this kind of data
+	#(d_set, a_sets, d_set_dict, a_dict_list) = ad_sets(values)	#There's no conflicts in this kind of data
 	time3 = timeit.default_timer()
 	#pp.pprint(d_set)
 	#pp.pprint(a_sets)

@@ -8,13 +8,13 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 	total_fat_T = {}
 	#print("g_dict: ", g_dict)
 	for key, value in goal_dict.items():
-		fat_T = {}
-		print("G: ", value)
+		real_T = []
+		#print("G: ", value)
 		G = value
 		G_left = G
 		while np.size(G)!=0:
-			pp.pprint("Instant G: ")
-			pp.pprint(G)
+			#pp.pprint("Instant G: ")
+			#pp.pprint(G)
 			T = []
 			T_content = []
 			T_G = []	#contain intersection of all [(a,v)] and G and their order 
@@ -50,46 +50,54 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 					T_G.append([i,set(np.intersect1d(av_dict[i][2], G))])
 				for g in g_pos_list:
 					T_G[g][1] = [] 
-				print("new T_G: ", T_G)
-				print("current T: ", T)
-				print("T_content: ", T_content)
-				print("T_content and G intersection: ", set(T_content)!=set(np.intersect1d(T_content, G)))
-			print("T: ", T)
+				#print("new T_G: ", T_G)
+				#print("current T: ", T)
+				#print("T_content: ", T_content)
+				#print("T_content and G intersection: ", set(T_content)!=set(np.intersect1d(T_content, G)))
+			#print("T: ", T)
 			#print("Length of T: ", len(T))
 			#==========smallest while end====================# 
-			real_T = []
 			if len(T) != 1:
-				for p in range(0, len(T)):
-					ts_sets = [np.array(T[t][2]) for t in range(0, len(T)) if t!=p]
-					print("ts_sets: ", ts_sets)
-					#if set(T_content) == set(reduce(np.intersect1d, (ts_sets))):
-					real_T_content = set(reduce(np.intersect1d, (ts_sets)))
-					print("Fuck: ", ts_sets, real_T_content, value)
-					if set(reduce(np.intersect1d, (ts_sets))) < set(value):
-						print("less than, True")
-
+				ts_remain = T
+				for p in T:
+					ts_sets = [t for t in ts_remain if t!=p]
+					ts_sets_av = [ts[2] for ts in ts_sets]
+					#print("ts_sets_av: ", ts_sets_av)
+					try:		#if there's two sets and the redundancy one has been deleted
+						c_T_content = set(reduce(np.intersect1d, (ts_sets_av)))
+						#print("c_T_content, value: ", c_T_content, value)
+						if c_T_content <= set(value):
+							#print("Fuck!", c_T_content, value)
+							ts_remain = ts_sets
+							T_content = list(c_T_content)
+					except:
+						#print("Two element in set")
 						continue
-					real_T.append(T[p][0:2])
+				real_T.append([[tsm[0:2] for tsm in ts_remain],T_content])
 			else:
-				real_T = T[0][0:2]
-			print("real_T: ",real_T)		
-			if len(fat_T) != 0:
-				for T_key, T_value in fat_T.items():
-					if set(T_value) == set(np.intersect1d(T_value, T_content)):		#consist element is the subset of new T_content, delete it
-						del fat_T[T_key]
-			#fat_T[str(real_T)] = #
-			#fat_T.append(real_T)
-			
+				#print("Shit: ", T[0:1])
+				real_T.append([[T[0][0:2]],T_content])
+			print("real_T: ",real_T)
 			G_left = np.array(list(set(G_left)-set(G)))
 			G = G_left
-			#print("G_left: ", G_left)
-		"""
-		if len(fat_T) != 1:
-			for f in range(0, len(fat_T)):
-		"""
-		print("fat_T: ", fat_T)
-		#total_fat_T[key] = fat_T
-		total_fat_T[key] = fat_T.keys()
-	print("total_fat_T: ", total_fat_T)
-			
+			#==========small for loop end=============#
+		if len(real_T) != 1:
+			Ts_remain = real_T
+			for T in real_T:
+				Ts_sets = [rT for rT in Ts_remain if rT != T]
+				Ts_sets_keys = [Ts[1] for Ts in Ts_sets]
+				c_fat_T = set(reduce(np.union1d, (Ts_sets_keys)))
+				#print('c_fat_T: ', c_fat_T)
+				if c_fat_T == set(value):
+					#print("What the fuck!", Ts_sets)
+					Ts_remain = Ts_sets
+			#print("Ts_remain: ", Ts_remain)		
+		else:
+			Ts_remain = real_T
+		#total_fat_T[key] = Ts_remain   		#with av
+		total_fat_T[key] = [f[0] for f in Ts_remain]
+		#===========big for loop end================#
+	#print("total_fat_T: ")
+	pp.pprint (total_fat_T)	
+
 	return total_fat_T

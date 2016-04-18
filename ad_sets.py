@@ -52,27 +52,33 @@ def ad_sets(vectors):
 	#print("d_set_dict: ", d_set_dict)		
 	return d_set, a_sets, d_set_dict, a_dict_list
 
-def A_set(vectors):	
-	"""
+def numeric_A_set(comp_set,case_num):
 	#=====================Use sets' intersection to calculate A===================#
 	#----------put all A_sets in one list, except total_set[0]-----------#
-	comp = [sub_set for A_set in total_set[0:-1] for sub_set in A_set] 	 
-	#print(comp)
-	elem_set = np.linspace(0,case_num-1,case_num)		
+	#comp = [sub_set for A_set in total_set[0:-1] for sub_set in A_set] 	
+	#print(comp)	
+	n_A_set = []		
+	comp = comp_set		
+	print("comp: ", comp)
+	elem_set = np.linspace(0,case_num-1,case_num)		#create set from 0 to casenum-1 for counting
 	while True:
 		try:		
-			#print(elem_set[0])
+			print(elem_set[0])
 			its_set=[cset for cset in comp if np.in1d(cset,elem_set[0],assume_unique=True).any()]
-			#print(elem_set[0], its_set)
+			print(elem_set[0], its_set)
+			
 			p_result = reduce(np.intersect1d, (its_set))
-			A_sets.append(p_result)
-			#print(p_result)
+			print("p_result: ", p_result)
+			n_A_set.append(p_result.tolist())
+			print("n_A_set: ", n_A_set)
 			elem_set = np.setdiff1d(elem_set,p_result)
-			#print(elem_set)
-			#print(p_result)
+			print("elem_set: ", elem_set)
 		except:
 			break
-	"""
+	
+	return n_A_set
+
+def A_set(vectors):	
 	#===================Use brute compare to cal A=========================#
 	A_build = timeit.default_timer()
 	Attrs = vectors.tolist()
