@@ -82,7 +82,7 @@ if __name__ == "__main__":
 		print (data)
 	#------------------for test------------------#"""
 	time1 = timeit.default_timer()	
-	data = read_dataset("austr.txt")
+	data = read_dataset("test.txt")
 	time2 = timeit.default_timer()
 	print("**Data read time: ", time2-time1)
 	values = data[1:]	#contain decision column
@@ -99,13 +99,16 @@ if __name__ == "__main__":
 	else:
 		print("This is symbolic dataset")
 		d_set, a_sets, d_set_dict, a_dict_list = ad_sets(values[:,-1])
+		print("d_set_dict: ", d_set_dict)
 		#if ul_flag == False			#ul_flag defined as upper=True, lower=False
 		lower_set = lower(d_set_dict,A_set)  
 		print("Lower: ", lower_set)
 		upper_set = upper(d_set_dict,A_set)
-		print("Upper: ", upper_set)
+		#print("Upper: ", upper_set)
 		av_dict = av(values)
-		total_fat_T = lem2(upper_set, av_dict)
+		print("av_dict: "),
+		print (av_dict)
+		total_fat_T = lem2(lower_set, av_dict)
 
 	#===========print the result as the formated teacher give==========#
 	for concept, situations in total_fat_T.items():
@@ -115,11 +118,6 @@ if __name__ == "__main__":
 				show_string = show_string+"(%s, %s) & "%(data[0][situations[s][c][0]],situations[s][c][1])
 			show_string = show_string+"(%s, %s)"%(data[0][situations[s][-1][0]],situations[s][-1][1])+" -> %s\n"%concept
 		print(show_string)
-			
-
-
-
-
 	#++++++lower_set same as d_set_dict, av_dict same as cp_dict
 
 		#if cf:

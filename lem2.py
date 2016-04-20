@@ -22,7 +22,7 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 			for i in range(0, len(av_dict)):
 				T_G.append([i,np.intersect1d(av_dict[i][2], G)])	#only av contains the total information 
 			#print("all [a,v] intersected with G: ", T_G)
-			while T==[] or set(T_content)!=set(np.intersect1d(T_content, G)):
+			while T==[] or set(T_content)!=set(np.intersect1d(T_content, value)):
 				length_set = np.array([len(T_G[i][1]) for i in range(0, len(T_G))])
 				#print("length_set: ", length_set)
 				max_item = max(length_set)
@@ -77,27 +77,31 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 			else:
 				#print("Shit: ", T[0:1])
 				real_T.append([[T[0][0:2]],T_content])
-			print("real_T: ",real_T)
-			G_left = np.array(list(set(G_left)-set(G)))
+			
+			G_left = np.array(list(set(G_left)-set(T_content)))
 			G = G_left
 			#==========small for loop end=============#
+		print("real_T: ",real_T)
 		if len(real_T) != 1:
 			Ts_remain = real_T
 			for T in real_T:
 				Ts_sets = [rT for rT in Ts_remain if rT != T]
 				Ts_sets_keys = [Ts[1] for Ts in Ts_sets]
-				c_fat_T = set(reduce(np.union1d, (Ts_sets_keys)))
-				#print('c_fat_T: ', c_fat_T)
-				if c_fat_T == set(value):
-					#print("What the fuck!", Ts_sets)
-					Ts_remain = Ts_sets
+				try:
+					c_fat_T = set(reduce(np.union1d, (Ts_sets_keys)))
+					#print('c_fat_T: ', c_fat_T)
+					if c_fat_T == set(value):
+						#print("What the fuck!", Ts_sets)
+						Ts_remain = Ts_sets
+				except:
+					continue
 			#print("Ts_remain: ", Ts_remain)		
 		else:
 			Ts_remain = real_T
 		#total_fat_T[key] = Ts_remain   		#with av
 		total_fat_T[key] = [f[0] for f in Ts_remain]
 		#===========big for loop end================#
-	#print("total_fat_T: ")
+	print("total_fat_T: ")
 	pp.pprint (total_fat_T)	
 
 	return total_fat_T

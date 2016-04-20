@@ -20,6 +20,7 @@ def ad_sets(vectors):
 		oc_dict = []
 		total_set = []	
 		for i in range(0, col_num):	
+			print("col_num: ",i)
 			column = vectors[:,i]
 			#print("V: ", V)
 			uniques =  np.unique(column)
@@ -38,7 +39,7 @@ def ad_sets(vectors):
 				a_sets.append(a_set)
 		a_dict_list.append(a_set_dict)
 		a_build = timeit.default_timer()
-	except IndexError:		#1d-vector
+	except IndexError as e:		#1d-vector
 		uniques =  np.unique(vectors)
 		for key in uniques:
 			s_set = np.where(vectors == key)[0]
