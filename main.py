@@ -1,77 +1,32 @@
 import numpy as np
 import pprint as pp 
 from io import StringIO
-import re, timeit, collections, random
-from ad_sets import ad_sets, A_set, numeric_A_set
+import re, timeit, collections, random, math
+from ad_sets import d_set, A_set, numeric_A_set
 from conflict import lower, upper
 from input_dataset import read_dataset
 from lem2 import lem2
+from col_process import col_cutpoints, col_av
 
-def k_parts(vectors, k):
-	#???????????if length can't be divided integrately??????????????#
-	cases_num = len(vectors[:,1])
-	rs = range(0, 12)
+def k_parts(cases_num, k):
+	f_num = int(math.ceil(cases_num/float(k)))
+	print("Number of cases in each folder: ", f_num)
+	rs = range(0, cases_num)
 	remain = rs
+	k_sets = []
 	while remain:
-		print("remain: ", remain)
-		select = random.sample(remain, 4)
-		remain = set(remain) - set(select)
-		print("select: ", select)
-
-
-
-def total_cutpoints(vectors):		#get all [(a,v)] for lem2, change to new matrix
-	print("In total cutpoints...")
-	cut_start = timeit.default_timer()
-	raw_value = vectors[:,:-1].astype(np.float)
-	(d_set, a_sets, d_set_dict, a_sets_dict) = ad_sets(vectors[:,-1]) #get d_set, which never change
-	#print(d_set)
-	col_num = len(raw_value[1,:])
-	case_num = len(raw_value[:,1])
-	#print(col_num)
-	#print(case_num)
-	sorted_element = []		#all unique elements in the column	
-	cp_dict = [] #[[0, '0.8..1.0', array([0, 1, 2])],... format, cutpoints dict, used for lem2
-	comp_set = []
-	for j in range(0, col_num):		#ignore decision column
-		cp_list = []
-		column = raw_value[:,j]
-		sorted_element = sorted(np.unique(column))
-		start_point = sorted_element[0]
-		end_point = sorted_element[-1]
-		#print("sorted_element: ",sorted_element)
-		if len(sorted_element) == 1:
-			cp_dict.append([j,"%s..%s"%(sorted_element[0],sorted_element[0]),range(0, col_num)])
-			continue 
-		for i in range(0, len(sorted_element)-1):
-			mid_point = round((np.float(sorted_element[i])+np.float(sorted_element[i+1]))/2,4)
-			cp_list.append(mid_point)	
-		for cp in cp_list:
-			pos1 = np.where((column>=start_point)&(column<cp))[0]
-			comp_set.append(pos1)
-			cp_dict.append([j,"%s..%s"%(start_point,cp),pos1])
-			pos2 = np.where((column>cp)&(column<=end_point))[0]
-			comp_set.append(pos2)
-			cp_dict.append([j,"%s..%s"%(cp, end_point),pos2])
-	#print("cp_dict: ")
-	#pp.pprint(cp_dict)
-	#print("d_set_dict: ")
-	#pp.pprint (d_set_dict)
-	return cp_dict, d_set_dict, comp_set		#this can be used for lem2	
-	
-def av(vectors):
-	print("In av function...")
-	syb_mat = vectors[:,:-1]
-	av_dict = []		#format is the same with cp_dict
-	for i in range(0, len(syb_mat[1,:])):
-		column = syb_mat[:,i]
-		sorted_element = sorted(np.unique(column))
-		for elem in sorted_element:
-			pos = np.where((column==elem))[0]
-			av_dict.append([i, elem, pos])
-	#pp.pprint("av_dict: ")
-	#pp.pprint(av_dict)
-	return av_dict
+		try:
+			#print("remain: ", remain)
+			select = random.sample(remain, f_num)
+			k_sets.append(select)
+			remain = set(remain) - set(select)
+			#print("select: ", select)
+		except:			#ValueError
+			print("Dataset cannot be exactly divided!")
+			k_sets.append(list(remain))
+			break
+	#print("k_sets: ", k_sets)
+	return k_sets
 
 if __name__ == "__main__":
 	"""#------------------for test------------------# 
@@ -82,30 +37,52 @@ if __name__ == "__main__":
 		print (data)
 	#------------------for test------------------#"""
 	time1 = timeit.default_timer()	
-	data = read_dataset("test.txt")
+	data = read_dataset("austr.txt")
 	time2 = timeit.default_timer()
 	print("**Data read time: ", time2-time1)
 	values = data[1:]	#contain decision column
-	A_set = A_set(values[:,0:-1])
+	cases_num = len(values[:,0]) 
+	attr_num = len(values[0,0:-1])
+	#print("attr_num: ",attr_num)
 	#================divide to k parts============#
-
-	#-----------judge data_type of attributes----------#
-	if not re.match(r'(.+?)(\d+\.\.\d+)(.+?)',values[0][0]):	
-		print("***This is not symbolic value dataset. Assume dataset is consistant!")
-		cp_dict, d_set_dict, comp_set = total_cutpoints(values)
-		lower_set = lower(d_set_dict, A_set)
-		total_fat_T =  lem2(lower_set, cp_dict)
-		 #data[1:][:-1]
-	else:
-		print("This is symbolic dataset")
-		d_set, a_sets, d_set_dict, a_dict_list = ad_sets(values[:,-1])
-		print("d_set_dict: ", d_set_dict)
+	k_sets = k_parts(cases_num, 2)		#Second arg is # of k-folders
+	for pf in k_sets:
+		#print("pf: ", pf)
+		test_mat = [values[pos,:] for pos in pf]
+		#test_mat = np.array(test_mat)
+		train_mat = np.delete(values, (pf), axis=0)
+		#print("train_mat: ", train_mat)
+		#print("test_mat: ", test_mat)
+		part_A_set = A_set(values[:,0:-1])
+		#print("part_A_set: ", part_A_set)
+		#A_set = A_set(train_mat[:,0:-1])
+		part_d_set, part_d_dict = d_set(train_mat[:,-1])
+		#print("d_set_dict: ", d_set_dict)
 		#if ul_flag == False			#ul_flag defined as upper=True, lower=False
-		lower_set = lower(d_set_dict,A_set)  
-		print("Lower: ", lower_set)
-		upper_set = upper(d_set_dict,A_set)
+		lower_set = lower(part_d_dict,part_A_set)  
+		#print("Lower: ", lower_set)
+		upper_set = upper(part_d_dict,part_A_set)
 		#print("Upper: ", upper_set)
-		av_dict = av(values)
+		#============Seperate symbolic and numeric dataset==========#
+		total_av = []
+		for i in range(0, attr_num):	
+			col = train_mat[:,i]
+			if re.search(r'(\d+\.\.\d+)',col[0]):	
+				print("***This is symbolic column!")
+				col_av_dict = col_av(col,i)
+				total_av.extend(col_av_dict)
+				#print("total_av: ", total_av)			
+			else:
+				print("**This is numeric column")
+				cp_dict = col_cutpoints(col,i)
+				#print("cp_dict: ", cp_dict)
+				total_av.extend(cp_dict)
+				#print("total_av: ", total_av)
+		total_fat_T = lem2(lower_set, total_av)
+
+	"""
+	#-----------judge data_type of every attribute----------#
+	
 		print("av_dict: "),
 		print (av_dict)
 		total_fat_T = lem2(lower_set, av_dict)
@@ -136,3 +113,4 @@ if __name__ == "__main__":
 	#pp.pprint(oc_dict)
 	#print (data)
 	#rule_set = lem2(values)
+	"""

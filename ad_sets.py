@@ -4,54 +4,21 @@ from io import StringIO
 from functools import reduce
 import re, timeit, collections
 
-def ad_sets(vectors):
+def d_set(ConceptColumn):
 	build = timeit.default_timer()
 	#print(vectors)
 	d_set = []
-	a_sets = []
 	d_set_dict = {}		
-	a_set_dict = {}		#[(a,v)] 
-	a_dict_list = []	#contains all the a_set_dict
-	try:
-		col_num = len(vectors[1,:])
-		case_num = len(vectors[:,1])
-		#print(col_num)
-		#print(case_num)
-		oc_dict = []
-		total_set = []	
-		for i in range(0, col_num):	
-			print("col_num: ",i)
-			column = vectors[:,i]
-			#print("V: ", V)
-			uniques =  np.unique(column)
-			#print(uniques)
-			a_set = []
-			for key in uniques:
-				#print("key: ",key)
-				s_set = np.where(column == key)[0]
-				if i == col_num-1:
-					d_set_dict[key]	= s_set
-					d_set.append(s_set)
-				else:
-					a_set_dict[key] = s_set
-					a_set.append(s_set)
-			if not a_set == []:
-				a_sets.append(a_set)
-		a_dict_list.append(a_set_dict)
-		a_build = timeit.default_timer()
-	except IndexError as e:		#1d-vector
-		uniques =  np.unique(vectors)
-		for key in uniques:
-			s_set = np.where(vectors == key)[0]
-			d_set.append(s_set)
-			d_set_dict[key] = s_set
-		a_sets = ""
-		a_set_dicts = {}
+	uniques =  np.unique(ConceptColumn)
+	for key in uniques:
+		s_set = np.where(ConceptColumn == key)[0]
+		d_set.append(s_set)
+		d_set_dict[key] = s_set
 	ad_build = timeit.default_timer()
 	print("******Time for a and d*********: ", ad_build-build)
 	#print("d_set: ", d_set)
 	#print("d_set_dict: ", d_set_dict)		
-	return d_set, a_sets, d_set_dict, a_dict_list
+	return d_set, d_set_dict
 
 def numeric_A_set(comp_set,case_num):
 	#=====================Use sets' intersection to calculate A===================#
@@ -87,7 +54,7 @@ def A_set(vectors):
 	#unique_vecs = [vec for vec in set(tuple(x.tolist()) for x in Attrs)]
 	vec_set = [list(vec) for vec in set(tuple(x) for x in Attrs)]
 	for vec in vec_set:
-		#print(vec)
+		print(vec)
 		#A_set.append(np.where(np.prod(vectors==vec,axis=-1))[0])
 		A_set.append([pos for pos, y in enumerate(Attrs) if y==vec])
 	#print(A_set)

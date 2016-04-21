@@ -2,7 +2,6 @@ import numpy as np
 import pprint as pp 
 from io import StringIO
 import re, timeit, collections, math
-from ad_sets import ad_sets, A_set
 
 def lower(d_dict, A):	#vectors-contain decisions
 	d_star_dict = d_dict
