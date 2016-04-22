@@ -54,7 +54,7 @@ def A_set(vectors):
 	#unique_vecs = [vec for vec in set(tuple(x.tolist()) for x in Attrs)]
 	vec_set = [list(vec) for vec in set(tuple(x) for x in Attrs)]
 	for vec in vec_set:
-		print(vec)
+		#print(vec)
 		#A_set.append(np.where(np.prod(vectors==vec,axis=-1))[0])
 		A_set.append([pos for pos, y in enumerate(Attrs) if y==vec])
 	#print(A_set)

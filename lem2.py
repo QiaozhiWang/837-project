@@ -6,6 +6,7 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 	print("In lem2 function...")
 	goal_dict = g_dict
 	total_fat_T = {}
+	to_show = {}
 	#print("g_dict: ", g_dict)
 	for key, value in goal_dict.items():
 		real_T = []
@@ -81,7 +82,7 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 			G_left = np.array(list(set(G_left)-set(T_content)))
 			G = G_left
 			#==========small for loop end=============#
-		print("real_T: ",real_T)
+		#print("real_T: ",real_T)
 		if len(real_T) != 1:
 			Ts_remain = real_T
 			for T in real_T:
@@ -98,10 +99,9 @@ def lem2(g_dict, av_dict):		#g_dict is either lower_dict or upper_dict
 			#print("Ts_remain: ", Ts_remain)		
 		else:
 			Ts_remain = real_T
-		#total_fat_T[key] = Ts_remain   		#with av
-		total_fat_T[key] = [f[0] for f in Ts_remain]
+		#print("Ts_remain: ", Ts_remain)
+		total_fat_T[key] = Ts_remain   		#with av
 		#===========big for loop end================#
-	print("total_fat_T: ")
-	pp.pprint (total_fat_T)	
-
+	#print("total_fat_T: ")
+	#print (total_fat_T)	
 	return total_fat_T

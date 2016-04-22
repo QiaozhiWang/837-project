@@ -41,7 +41,7 @@ def col_cutpoints(column,j):		#get all [(a,v)] for lem2, change to new matrix
 	return cp_dict		#this can be used for lem2	
 
 def col_av(symbolic_col,i):
-	print("In av function...")
+	#print("In av function...")
 	col_av_dict = []		#format is the same with cp_dict
 	column = symbolic_col
 	sorted_element = sorted(np.unique(column))

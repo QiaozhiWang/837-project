@@ -11,7 +11,7 @@ def read_dataset(path):
 	sec_reg = re.search(r'(\[(.+?)\])(.+?$)',first_reg,flags=re.DOTALL)
 	#print(sec_reg)
 	attr_d = filter(None, re.split(r'\s+',sec_reg.group(2),flags=re.DOTALL))
-	print("attr_d: ", attr_d)
+	#print("attr_d: ", attr_d)
 	data_sets.append(attr_d)	#first row of data_sets is its attris and decision	
 	elm_num = len(attr_d)		#elm_num = 16281
 	mess_data = filter(None, re.split(r'\s+',sec_reg.group(3),flags=re.DOTALL))
