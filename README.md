@@ -1,6 +1,7 @@
 # 837-project
 The detail is in the pdf file
 The following part is the readme.txt
+
 #=============About my code============#
 1. It is written by python, so you can run it directly on linux system.
 2. My code are put in two files. One is main.py, which is the main function and another is called All_Function, it includes all the functions called by main.
